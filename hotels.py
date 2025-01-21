@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Body, Query
-
+from schemas.hotels import Hotel, HotelPATCH
+ 
 router = APIRouter(prefix="/hotels", tags=["Отели"])
 
 hotels = [
@@ -8,6 +9,8 @@ hotels = [
     {"id": 3, "contry": 'США',"city": 'Бостон', "name":'Number 1'},
     
 ]
+
+
 
 @router.get("")
 def get_hotels(
@@ -24,35 +27,46 @@ def get_hotels(
         
     return hotels_
 
+
+
+
 @router.post("")
-def create_hotel(
-        contry: str = Body(embed=True),
-        name: str = Body(embed=True),
-        city: str = Body(embed=True)
-):
+def create_hotel(hotel_data: Hotel = Body(openapi_examples={
+    "1":{
+            'summary': 'Россия - Москва - Отель:Grand', 
+            'value': {
+                'contry': 'Россия',
+                'city': 'Москва',
+                'name':'Grand'
+            }
+        },
+    "2":{
+            'summary': 'ОАЭ - Дубай - Отель:Laky', 
+            'value': {
+                'contry': 'ОАЭ',
+                'city': 'Дубай',
+                'name':'Laky'
+            }
+        },
+    })):
     global hotels
     hotels.append({
         "id": hotels[-1]["id"] + 1,
-        "contry": contry,
-        "city": city,
-        "name": name,
+        "contry": hotel_data.contry,
+        "city": hotel_data.city,
+        "name": hotel_data.name,
     })
     return {"status": "OK"}
 
 @router.put("/{hotel_id}")
-def put_hotel(
-        hotel_id: int, 
-        name:str = Body(description="Название отеля"),
-        city:str = Body(description="Город"),
-        contry: str = Body(description="Название страны")
-    ):
+def put_hotel(hotel_id: int, hotel_data: Hotel):
     global hotels
     
     for hotel in hotels:
-        if hotel_id and contry and city and name and hotel['id'] == hotel_id:
-            hotel['name'] = name
-            hotel['city'] = city
-            hotel['contry'] = contry
+        if hotel_id and hotel_data.contry and hotel_data.city and hotel_data.name and hotel['id'] == hotel_id:
+            hotel['name'] = hotel_data.name
+            hotel['city'] = hotel_data.city
+            hotel['contry'] = hotel_data.contry
             return {"status": "OK"}
         else:
             continue
@@ -61,16 +75,14 @@ def put_hotel(
 @router.patch("/{hotel_id}")
 def patch_hotel(
         hotel_id: int, 
-        name:str | None = Body(None,description="Название отеля"),
-        city:str | None  = Body(None,description="Город"),
-        contry: str | None = Body(None,description="Название страны"),
+        hotel_data:HotelPATCH
     ):
     global hotels
     for hotel in hotels:
         if hotel['id'] == hotel_id:
-            hotel['name'] = name
-            hotel['city'] = city
-            hotel['contry'] = contry
+            hotel['name'] = hotel_data.name
+            hotel['city'] = hotel_data.city
+            hotel['contry'] = hotel_data.contry
             return {"status": "OK"}
         else:
             continue
